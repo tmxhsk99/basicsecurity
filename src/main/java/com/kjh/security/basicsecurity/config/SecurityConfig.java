@@ -1,4 +1,4 @@
-package com.kjh.security.basicsecurity.configure;
+package com.kjh.security.basicsecurity.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,10 +8,13 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @Configuration
@@ -50,6 +53,29 @@ public class SecurityConfig {
                 })
                 .permitAll();
         
+        //로그아웃 처리
+        //스프링 시큐리티틑 원칙적으로 POST로만 로그아웃 구현 가능 하다.
+        http
+                .logout()
+                .logoutUrl("/logout") //로그아웃 요청 url
+                .logoutSuccessUrl("/login") //로그 아웃 성공시 이동 페이지
+                .addLogoutHandler(new LogoutHandler() {
+                    @Override
+                    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+                        HttpSession session = request.getSession();
+                        session.invalidate();//세션해재ㅔ
+                    }
+                })
+                .logoutSuccessHandler(new LogoutSuccessHandler() {
+                    @Override
+                    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                        //logoutSuccessURl 은 페잊만 이동가능하지만 SuccessHandler는 여러가지 처리가 가능하다.
+                        response.sendRedirect("/login");//일단 login 페이지 이동기능만 넣는다.
+                    }
+                })
+                .deleteCookies("remember-me") //로그아웃할때 이 쿠키가 삭제한다.
+                ;
+
         return http.build();
     }
 }
