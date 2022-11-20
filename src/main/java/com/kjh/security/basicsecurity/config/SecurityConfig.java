@@ -1,10 +1,12 @@
 package com.kjh.security.basicsecurity.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -20,8 +22,11 @@ import java.io.IOException;
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    UserDetailsService userDetailsService;
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         //인가 정책
         http
                 .authorizeRequests()//요청에 대한 보안 검사를 실시
@@ -47,12 +52,18 @@ public class SecurityConfig {
                     //인증 실패 시 처리
                     @Override
                     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                        System.out.println("exception : "+ exception.getMessage());
+                        System.out.println("exception : " + exception.getMessage());
                         response.sendRedirect("/login");
                     }
                 })
-                .permitAll();
-        
+                //remember-me 토큰 설정 (자동 로그인, Id 기억하기)
+                .and()
+                .rememberMe()
+                .rememberMeParameter("remember") //default : remember-me
+                .tokenValiditySeconds(3600)
+                .userDetailsService(userDetailsService)
+                ;
+
         //로그아웃 처리
         //스프링 시큐리티틑 원칙적으로 POST로만 로그아웃 구현 가능 하다.
         http
@@ -74,7 +85,7 @@ public class SecurityConfig {
                     }
                 })
                 .deleteCookies("remember-me") //로그아웃할때 이 쿠키가 삭제한다.
-                ;
+        ;
 
         return http.build();
     }
