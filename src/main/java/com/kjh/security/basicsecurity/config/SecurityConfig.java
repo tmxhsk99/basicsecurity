@@ -22,8 +22,11 @@ import java.io.IOException;
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
+
+    public SecurityConfig(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -63,6 +66,12 @@ public class SecurityConfig {
                 .tokenValiditySeconds(3600)
                 .userDetailsService(userDetailsService)
                 ;
+        //동시 세션 제어관련 처리 추가
+        http
+                .sessionManagement()
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true) //세션이 초과될경우 : 로그인을 실패하게 만듬 true / 이전세션을 만료시킨다. false
+        ;
 
         //로그아웃 처리
         //스프링 시큐리티틑 원칙적으로 POST로만 로그아웃 구현 가능 하다.
