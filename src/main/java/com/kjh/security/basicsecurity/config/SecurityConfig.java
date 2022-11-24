@@ -64,14 +64,13 @@ public class SecurityConfig {
                 .rememberMe()
                 .rememberMeParameter("remember") //default : remember-me
                 .tokenValiditySeconds(3600)
-                .userDetailsService(userDetailsService)
-                ;
+                .userDetailsService(userDetailsService);
         //동시 세션 제어관련 처리 추가
         http
                 .sessionManagement()
                 .maximumSessions(1)
-                .maxSessionsPreventsLogin(true) //세션이 초과될경우 : 로그인을 실패하게 만듬 true / 이전세션을 만료시킨다. false
-        ;
+                .maxSessionsPreventsLogin(true); //세션이 초과될경우 : 로그인을 실패하게 만듬 true / 이전세션을 만료시킨다. false
+
         http
                 .sessionManagement()
                 //.sessionFixation().none(); // 새션을 새로 생성하지 않는다.(세션 고정 공격에 취약)
@@ -98,8 +97,8 @@ public class SecurityConfig {
                         response.sendRedirect("/login");//일단 login 페이지 이동기능만 넣는다.
                     }
                 })
-                .deleteCookies("remember-me") //로그아웃할때 이 쿠키가 삭제한다.
-        ;
+                .deleteCookies("remember-me"); //로그아웃할때 이 쿠키가 삭제한다.
+
 
         return http.build();
     }
