@@ -72,6 +72,11 @@ public class SecurityConfig {
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(true) //세션이 초과될경우 : 로그인을 실패하게 만듬 true / 이전세션을 만료시킨다. false
         ;
+        http
+                .sessionManagement()
+                //.sessionFixation().none(); // 새션을 새로 생성하지 않는다.(세션 고정 공격에 취약)
+                .sessionFixation().changeSessionId(); // 새션 아이디를 새로 바꿔준다.
+
 
         //로그아웃 처리
         //스프링 시큐리티틑 원칙적으로 POST로만 로그아웃 구현 가능 하다.
@@ -83,7 +88,7 @@ public class SecurityConfig {
                     @Override
                     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
                         HttpSession session = request.getSession();
-                        session.invalidate();//세션해재ㅔ
+                        session.invalidate();//세션해제
                     }
                 })
                 .logoutSuccessHandler(new LogoutSuccessHandler() {
