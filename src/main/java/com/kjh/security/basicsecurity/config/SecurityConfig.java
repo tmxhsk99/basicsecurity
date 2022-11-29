@@ -6,7 +6,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -33,7 +37,11 @@ public class SecurityConfig {
         //인가 정책
         http
                 .authorizeRequests()//요청에 대한 보안 검사를 실시
+                .antMatchers("/user").hasRole("USER") //사용자 인가처리 추가
+                .antMatchers("/admin/pay").hasRole("SYS")
+                .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
                 .anyRequest().authenticated(); //어떤 요청도 인증을 받아야함
+
         //인증 정책
         http
                 .formLogin()
@@ -102,4 +110,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }
