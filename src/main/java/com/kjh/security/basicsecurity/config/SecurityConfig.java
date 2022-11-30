@@ -1,8 +1,10 @@
 package com.kjh.security.basicsecurity.config;
 
+import org.apache.coyote.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -11,11 +13,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +44,7 @@ public class SecurityConfig {
         //인가 정책
         http
                 .authorizeRequests()//요청에 대한 보안 검사를 실시
+                .antMatchers("/login").permitAll()
                 .antMatchers("/user").hasRole("USER") //사용자 인가처리 추가
                 .antMatchers("/admin/pay").hasRole("SYS")
                 .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
@@ -55,8 +63,14 @@ public class SecurityConfig {
                     //인증성공 시 처리 할 클래스
                     @Override
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                        //인증 성공시 인증 상태 가 아닐때 요청했던 자원으로 바로 이동하게 된다..
+                        RequestCache reqeustCache = new HttpSessionRequestCache();
+                        SavedRequest savedRequest = reqeustCache.getRequest(request, response);
+                        String redirectUrl = savedRequest.getRedirectUrl();
+
                         System.out.println("authentication : " + authentication.getName());
-                        response.sendRedirect("/");
+
+                        response.sendRedirect(redirectUrl);
                     }
                 })
                 .failureHandler(new AuthenticationFailureHandler() {
@@ -84,6 +98,25 @@ public class SecurityConfig {
                 //.sessionFixation().none(); // 새션을 새로 생성하지 않는다.(세션 고정 공격에 취약)
                 .sessionFixation().changeSessionId(); // 새션 아이디를 새로 바꿔준다.
 
+        //인증 인가 예외 처리
+        http
+                .exceptionHandling()
+                .authenticationEntryPoint(new AuthenticationEntryPoint() {
+                    @Override
+                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+                        //인증 예외 발생 시 처리 로직
+                        //여기 url 은 기본 springsecurity에서 제공하는페이지를 쓰지못하므로 로그인페이지 처리를 컨트롤러에 추가해야한다.
+                        response.sendRedirect("/login");
+
+                    }
+                })
+                .accessDeniedHandler(new AccessDeniedHandler() {
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        //인가 예외 발생 시 처리 로직
+                        response.sendRedirect("/denied");
+                    }
+                });
 
         //로그아웃 처리
         //스프링 시큐리티틑 원칙적으로 POST로만 로그아웃 구현 가능 하다.

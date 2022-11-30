@@ -25,9 +25,15 @@ public class SecurityController {
     public String adminPay(){
         return "adminPay";
     }
+
     @GetMapping("/amdin/**")
     public String amdin(){
         return "amdin";
+    }
+
+    @GetMapping("/login")
+    public String login(){
+        return "login";
     }
 
 }
