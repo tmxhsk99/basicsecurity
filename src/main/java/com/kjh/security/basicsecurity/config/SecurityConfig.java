@@ -97,7 +97,9 @@ public class SecurityConfig {
                 .sessionManagement()
                 //.sessionFixation().none(); // 새션을 새로 생성하지 않는다.(세션 고정 공격에 취약)
                 .sessionFixation().changeSessionId(); // 새션 아이디를 새로 바꿔준다.
-
+        //csrf 설정 명시적으로 추가 기본 활성화 되어있음
+        http
+                .csrf();
         //인증 인가 예외 처리
         http
                 .exceptionHandling()
