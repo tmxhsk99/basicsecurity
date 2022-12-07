@@ -2,6 +2,7 @@ package com.kjh.security.basicsecurity.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
@@ -33,7 +34,22 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
+
+    //다중 보안 연습을 위한 FilterChainBean
     @Bean
+    @Order(0)
+    public SecurityFilterChain filterChain2(HttpSecurity http) throws Exception {
+        http
+                .authorizeRequests()
+                .anyRequest().permitAll()
+                .antMatchers("/security/**").hasRole("USER")
+                .and()
+                .formLogin();
+
+        return http.build();
+    }
+    @Bean
+    @Order(1)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         //인가 정책
         http
